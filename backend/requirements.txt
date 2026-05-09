@@ -1,0 +1,15 @@
+setuptools<70.0.0
+flask
+flask-cors
+flask-sqlalchemy
+flask-jwt-extended
+dlib
+face-recognition-models
+face_recognition
+opencv-python-headless
+numpy
+Pillow
+werkzeug
+pandas
+python-dotenv
+gunicorn
