@@ -5,6 +5,9 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# Set default PORT environment variable (Render will override this dynamically)
+ENV PORT=10000
+
 # Set the working directory
 WORKDIR /app
 
@@ -41,8 +44,8 @@ RUN useradd -m -u 1000 appuser && \
 # Switch to the non-root user
 USER appuser
 
-# Expose the default backend port
-EXPOSE 5000
+# Expose the dynamic port (Render defaults to 10000)
+EXPOSE 10000
 
-# Start the application using Gunicorn, binding explicitly to port 5000
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "backend.app:app"]
+# Start the application using Gunicorn, binding dynamically to Render's $PORT environment variable
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT backend.app:app"]

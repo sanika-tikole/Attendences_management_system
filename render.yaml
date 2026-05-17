@@ -5,7 +5,5 @@ services:
     plan: free
     region: oregon
     envVars:
-      - key: PORT
-        value: 5000
       - key: FACE_MATCH_THRESHOLD
         value: "0.55"
