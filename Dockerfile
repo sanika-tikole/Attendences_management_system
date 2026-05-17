@@ -14,10 +14,11 @@ WORKDIR /app
 # Install minimal runtime system libraries for OpenCV and Dlib:
 # - libgomp1: GNU OpenMP library (critical for dlib multi-threading)
 # - libglib2.0-0: Required for low-level image processing
-# We do NOT install cmake, build-essential, or python3-dev as we bypass C++ compilation completely!
+# - git: Required to download face_recognition_models directly from GitHub
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     libglib2.0-0 \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
