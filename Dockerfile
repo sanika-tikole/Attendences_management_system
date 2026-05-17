@@ -44,5 +44,5 @@ USER appuser
 # Expose the default backend port
 EXPOSE 5000
 
-# Start the application using Gunicorn, dynamically binding to the Render $PORT (defaults to 5000 locally)
-CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-5000} backend.app:app"]
+# Start the application using Gunicorn, binding explicitly to port 5000
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "backend.app:app"]
