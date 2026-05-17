@@ -7,6 +7,7 @@ from .routes.attendance_routes import attendance_bp
 from .routes.employee_routes import employee_bp
 from .routes.health_routes import health_bp
 from .routes.recognition_routes import recognition_bp
+from .routes.auth_routes import auth_bp
 from .utils.logger import get_logger
 
 logger = get_logger("backend.app")
@@ -24,6 +25,7 @@ def create_app() -> Flask:
     app.register_blueprint(employee_bp)
     app.register_blueprint(attendance_bp)
     app.register_blueprint(recognition_bp)
+    app.register_blueprint(auth_bp)
 
     @app.route("/uploads/<path:filename>", methods=["GET"])
     def get_uploaded_file(filename: str):
