@@ -14,23 +14,21 @@ WORKDIR /app
 # Install minimal runtime system libraries for OpenCV and Dlib:
 # - libgomp1: GNU OpenMP library (critical for dlib multi-threading)
 # - libglib2.0-0: Required for low-level image processing
-# - git: Required to download face_recognition_models directly from GitHub
+# We do NOT install cmake, build-essential, or python3-dev as we bypass C++ compilation completely!
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     libglib2.0-0 \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
 COPY requirements.txt .
 
-# Upgrade pip and install optimized requirements
+# Upgrade pip and install optimized requirements from requirements.txt (including face-recognition-models)
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
-# Install face-recognition without dependencies to prevent pip from downloading 
-# the source dlib package and triggering a memory-heavy C++ compilation.
-RUN pip install --no-cache-dir face-recognition --no-deps
+# Install face-recognition 1.3.0 without dependencies to prevent C++ compilation spikes
+RUN pip install --no-cache-dir face-recognition==1.3.0 --no-deps
 
 # Copy the backend code
 COPY ./backend /app/backend
