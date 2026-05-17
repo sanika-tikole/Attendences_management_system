@@ -11,22 +11,27 @@ ENV PORT=10000
 # Set the working directory
 WORKDIR /app
 
-# Install minimal runtime system libraries for OpenCV and Dlib:
+# Install minimal runtime system libraries for OpenCV and Dlib, and compilation tools:
 # - libgomp1: GNU OpenMP library (critical for dlib multi-threading)
 # - libglib2.0-0: Required for low-level image processing
-# - git: Required to download face_recognition_models directly from GitHub
+# - git, cmake, build-essential: Tools requested for face_recognition setup
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     libglib2.0-0 \
     git \
+    cmake \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
 COPY requirements.txt .
 
-# Upgrade pip and install optimized requirements
+# Upgrade pip and install standard requirements
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
+
+# Explicitly force the Git model repository installation inside the container
+RUN pip install --no-cache-dir git+https://github.com/ageitgey/face_recognition_models.git
 
 # Install face-recognition 1.3.0 without dependencies to prevent C++ compilation spikes
 RUN pip install --no-cache-dir face-recognition==1.3.0 --no-deps
