@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
 
 from .config import Config, ensure_directories
@@ -26,6 +26,13 @@ def create_app() -> Flask:
     app.register_blueprint(attendance_bp)
     app.register_blueprint(recognition_bp)
     app.register_blueprint(auth_bp)
+
+    @app.route("/", methods=["GET"])
+    def root():
+        return jsonify({
+            "success": True,
+            "message": "Face Recognition Attendance System API is running."
+        }), 200
 
     @app.route("/uploads/<path:filename>", methods=["GET"])
     def get_uploaded_file(filename: str):
