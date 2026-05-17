@@ -22,6 +22,8 @@ A production-grade, full-stack attendance management solution leveraging state-o
 ```bash
 # Create & Activate Virtual Environment
 python -m venv backend/venv
+backend\venv\Scripts\activate
+
 
 # Install Dependencies
 .\backend\venv\Scripts\pip.exe install dlib-bin
