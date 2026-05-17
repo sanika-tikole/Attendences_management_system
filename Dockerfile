@@ -1,5 +1,5 @@
-# Use Debian Bookworm Slim as base to use its pre-compiled heavy packages
-FROM debian:bookworm-slim
+# Use official Python 3.10 slim image
+FROM python:3.10-slim
 
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,49 +8,41 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /app
 
-# Install system Python 3, pre-compiled heavy libraries, and build tools for dlib python bindings
-# We use libdlib-dev so pip only compiles the python bindings (low memory) instead of the whole C++ library
+# Install minimal runtime system libraries for OpenCV and Dlib:
+# - libgomp1: GNU OpenMP library (critical for dlib multi-threading)
+# - libglib2.0-0: Required for low-level image processing
+# We do NOT install cmake, build-essential, or python3-dev as we bypass C++ compilation completely!
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-opencv \
-    python3-numpy \
-    libdlib-dev \
-    build-essential \
-    cmake \
-    libgl1-mesa-glx \
+    libgomp1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
-
-# Create a virtual environment that INHERITS system packages (opencv, numpy)
-RUN python3 -m venv --system-site-packages /opt/venv
-
-# Activate the virtual environment
-ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy requirements
 COPY requirements.txt .
 
-# Set environment variables to limit parallel jobs during pip install to prevent OOM
-ENV CMAKE_BUILD_PARALLEL_LEVEL=1
-ENV MAX_JOBS=1
+# Upgrade pip and install optimized requirements
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Remove opencv-python and numpy from requirements to prevent pip from downloading 
-# PyPI versions that override our pre-compiled system ones.
-RUN grep -v "opencv-python" requirements.txt | grep -v "numpy" > req_filtered.txt && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r req_filtered.txt
+# Install face-recognition without dependencies to prevent pip from downloading 
+# the source dlib package and triggering a memory-heavy C++ compilation.
+RUN pip install --no-cache-dir face-recognition --no-deps
 
 # Copy the backend code
 COPY ./backend /app/backend
 
-# Create a non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app /opt/venv
+# Create standard runtime directories for database, uploads, and logs
+RUN mkdir -p /app/database /app/uploads /app/logs
+
+# Create a non-root user for production security and grant correct file permissions
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Switch to the non-root user
 USER appuser
 
-# Expose the port
+# Expose the default backend port
 EXPOSE 5000
 
-# Start the application
-CMD ["python", "-m", "backend.app"]
+# Start the application using Gunicorn, dynamically binding to the Render $PORT (defaults to 5000 locally)
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-5000} backend.app:app"]
